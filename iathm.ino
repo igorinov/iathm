@@ -27,6 +27,13 @@
 #define I2C_TIMEOUT 1000
 #define I2C_SLOWMODE 1
 
+/*
+ * Degree sign character code in HD44780U character table
+ * ROM Code A00: 0xDF
+ * ROM Code A02: 0xD0
+ */
+#define DEGREE_SIGN 0xDF
+
 #include <SoftI2CMaster.h>
 
 byte address = 0x80;
@@ -105,11 +112,49 @@ void setup()
   }
 }
 
+void print_temp(char *s, byte size, short t, char scale_char)
+{
+  byte i = size;
+  char sign = ' ';
+
+  if (size < 7) {
+    return;
+  }
+
+  if (t > 0) {
+    sign = '+';
+  }
+
+  if (t < 0) {
+    sign = '-';
+    t = -t;
+  }
+
+  s[--i] = '\0';
+  s[--i] = scale_char;
+  s[--i] = DEGREE_SIGN;
+  s[--i] = digit[t % 10];
+  t /= 10;
+  s[--i] = '.';
+  while (t > 0 && i > 0) {
+    s[--i] = digit[t % 10];
+    t /= 10;
+  }
+
+  if (i > 0) {
+    s[--i] = sign;
+  }
+
+  while(i > 0) {
+    s[--i] = ' ';
+  }
+}
+
 void loop()
 {
   byte status = 0;
   long d = 0;
-  long t, tf;
+  long tc, tf;
   word rh = 0;
   byte sum;
   char *p;
@@ -132,7 +177,7 @@ void loop()
   d |= i2c_read(true);
   i2c_stop();
   
-  rh = ((d * 125) >> 16) - 6;
+  rh = ((d * 1250) >> 16) - 6;
 
   if (!i2c_rep_start(address))
     return;
@@ -149,38 +194,23 @@ void loop()
   d |= i2c_read(true);
   i2c_stop();
   
-  t = ((d * 17572) >> 16) - 4685;
-  tf = (t * 9 / 5) + 3200;
-  t = (t + 5) / 10;
+  tc = ((d * 17572) >> 16) - 4685;
+  tf = (tc * 9 / 5) + 3200;
+  tc = (tc + 5) / 10;
   tf = (tf + 5) / 10;
 
-  strcpy(str_rh, "RH:   %");
-  i = 5;
+  strcpy(str_rh, "RH     %");
+  i = 7;
+  str_rh[--i] = digit[rh % 10];
+  rh /= 10;
+  str_rh[--i] = '.';
   do {
-    str_rh[i--] = digit[rh % 10];
+    str_rh[--i] = digit[rh % 10];
     rh /= 10;
   } while (rh != 0);
 
-  strcpy(str_tc, "   .  C");
-  i = 4;
-  str_tc[i--] = digit[t % 10];
-  t /= 10;
-  str_tc[i--] = '.';
-  do {
-    str_tc[i--] = digit[t % 10];
-    t /= 10;
-  } while (t != 0);
-  
-
-  strcpy(str_tf, "   .  F");
-  i = 4;
-  str_tf[i--] = digit[tf % 10];
-  tf /= 10;
-  str_tf[i--] = '.';
-  do {
-    str_tf[i--] = digit[tf % 10];
-    tf /= 10;
-  } while (tf != 0);
+  print_temp(str_tc, 9, tc, 'C');
+  print_temp(str_tf, 9, tf, 'F');
    
   Serial.println(str_rh);
   lcd.setCursor(0, 0);
@@ -190,4 +220,3 @@ void loop()
   lcd.setCursor(8, 1);
   lcd.print(str_tf);
 }
-

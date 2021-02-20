@@ -1,8 +1,9 @@
 # iathm
 Indoor Air Temperature and Humidity Monitor
 
-This is a sketch for Arduino with LCD shield and
-temperature/humidity sensor connected.
+This is a sketch for Arduino Uno with
+an LCD shield based on HD44780
+and a temperature/humidity sensor connected.
 
 ## Hardware
 
