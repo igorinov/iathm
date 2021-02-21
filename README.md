@@ -5,6 +5,8 @@ This is a sketch for Arduino Uno with
 an LCD shield based on HD44780
 and a temperature/humidity sensor connected.
 
+![Photo](https://altimeter.info/images/iathm.png)
+
 ## Hardware
 
   Arduino Uno
