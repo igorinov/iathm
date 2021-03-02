@@ -29,12 +29,18 @@
 
 /*
  * Degree sign character code in HD44780U character table
- * ROM Code A00: 0xDF
- * ROM Code A02: 0xD0
+ * ROM Code A00: DF
+ * ROM Code A02: D0
+ *
+ * In this project, CGRAM character 7 is used
  */
-#define DEGREE_SIGN 0xDF
+#define DEGREE_SIGN 7
 
 #include <SoftI2CMaster.h>
+
+byte degree_bitmap[] = {
+  0x0C, 0x12, 0x12, 0x0C, 0x00, 0x00, 0x00, 0x00
+};
 
 byte address = 0x80;
 char str_rh[16];
@@ -99,6 +105,8 @@ void setup()
   pinMode(SDA_PIN, INPUT_PULLUP);
 
   i2c_init();
+
+  lcd.createChar(DEGREE_SIGN, degree_bitmap);
 
   /* Set number of columns and rows */
   lcd.begin(16, 2);
